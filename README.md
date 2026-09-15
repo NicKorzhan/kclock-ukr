@@ -1,27 +1,45 @@
-# Kindle Clock
+# Kindle Годинник (Україна)
 
-Transforms your idle Kindle 4 Non-Touch (K4NT) into a stylish clock display.
+Перетворює ваш Kindle 4 Non-Touch (K4NT) у стильний годинник з українською датою, днем тижня та часовим поясом Києва.
 
-![Kindle Clock](image.jpg "Kindle Clock")
+![Kindle Годинник](image.jpg "Kindle Годинник")
 
+## Можливості
 
-## Prerequisites
-Jailbroken Kindle device with KUAL installed. To achieve this:
-1. [Jailbreak your K4NT](https://wiki.mobileread.com/wiki/Kindle4NTHacking#Jailbreak).
-2. [Install Mobileread Kindlet Kit (MKK)](https://www.mobileread.com/forums/showthread.php?t=233932).
-3. [Install Kindle Unified Application Launcher (KUAL)](https://www.mobileread.com/forums/showthread.php?t=203326).
+* Поточний час, дата та день тижня українською
+* Часовий пояс Europe/Kyiv (EET/EEST)
+* Рівень батареї
+* Орієнтація екрана: портрет, альбомна ліворуч / праворуч
+* Зміна розміру шрифту годинника
+* Часткове оновлення екрана щохвилини; повне — кожні 10 хвилин (менше «примар» на e-ink)
 
+## Вимоги
 
-## Installation
-1. Connect your Kindle to your computer via USB.
-2. Copy the `kclock` directory to the `extensions` directory on your Kindle.
-3. Eject your Kindle and launch the "Kindle Clock" from KUAL.
+Потрібен jailbroken Kindle з встановленим KUAL:
 
+1. [Jailbreak K4NT](https://wiki.mobileread.com/wiki/Kindle4NTHacking#Jailbreak)
+2. [Встановити Mobileread Kindlet Kit (MKK)](https://www.mobileread.com/forums/showthread.php?t=233932)
+3. [Встановити Kindle Unified Application Launcher (KUAL)](https://www.mobileread.com/forums/showthread.php?t=203326)
 
-## Usage
-* The clock will automatically update every minute to display the current time, date, weekday, and battery level.
-* To exit the clock and return to the Kindle home screen, press the **Home Button** on your Kindle device.
+## Встановлення
 
+1. Підключіть Kindle до комп’ютера через USB.
+2. Скопіюйте каталог `kclock` у каталог `extensions` на Kindle.
+3. Від’єднайте Kindle і запустіть **Kindle Годинник** з меню KUAL.
 
-## Warning
-**Use at your own risk.** I am not responsible for any damage or issues that may arise from using this extension on your Kindle device.
+## Керування
+
+| Кнопка | Дія |
+|--------|-----|
+| **Home** | Вийти з годинника та повернутися на головний екран |
+| **Вгору** | Портретна орієнтація |
+| **Ліворуч** | Альбомна орієнтація (ліворуч) |
+| **Праворуч** | Альбомна орієнтація (праворуч) |
+| **Page Up** / вгору по сторінках | Збільшити шрифт |
+| **Page Down** / вниз | Зменшити шрифт |
+
+Налаштування орієнтації та розміру шрифту зберігаються між запусками.
+
+## Попередження
+
+**Використовуйте на власний ризик.** Автор не несе відповідальності за можливі пошкодження або проблеми, пов’язані з використанням цього розширення на вашому Kindle.

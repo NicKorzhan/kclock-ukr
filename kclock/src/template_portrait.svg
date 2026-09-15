@@ -1,0 +1,27 @@
+<svg width="600" height="800" xmlns="http://www.w3.org/2000/svg" version="1.1">
+    <defs>
+        <style type="text/css">
+            @font-face {
+                font-family: "DejaVuSans";
+                src: url("FONT_PATH");
+            }
+        </style>
+    </defs>
+
+    <rect x="0" y="0" width="600" height="800" fill="white"/>
+
+    <!-- Header -->
+    <rect x="0" y="0" width="600" height="160" fill="black"/>
+    <text x="300" y="70" font-family="DejaVuSans, Arial, sans-serif" font-size="52" text-anchor="middle" fill="white">WEEKDAY</text>
+    <text x="300" y="130" font-family="DejaVuSans, Arial, sans-serif" font-size="34" text-anchor="middle" fill="white">DATE</text>
+
+    <!-- Digital clock: y=CLOCK_Y is baseline for optical vertical center -->
+    <text x="300" y="CLOCK_Y" font-family="DejaVuSans, monospace" font-size="FONT_SIZE" text-anchor="middle" fill="black">HOURS:MINUTES</text>
+
+    <!-- Footer -->
+    <rect x="0" y="750" width="600" height="50" fill="white" stroke="black" stroke-width="1"/>
+    <text x="110" y="780" font-family="DejaVuSans, Arial, sans-serif" font-size="18" fill="black">BATTERY_LABEL:</text>
+    <rect x="220" y="765" width="200" height="20" fill="#e0e0e0" stroke="black" stroke-width="1"/>
+    <rect x="220" y="765" width="BATTERY_WIDTH" height="20" fill="black" stroke="black" stroke-width="1"/>
+    <text x="440" y="780" font-family="DejaVuSans, Arial, sans-serif" font-size="18" fill="black">BATTERY_LEVEL%</text>
+</svg>

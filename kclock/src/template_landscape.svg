@@ -1,0 +1,33 @@
+<svg width="600" height="800" xmlns="http://www.w3.org/2000/svg" version="1.1">
+    <defs>
+        <style type="text/css">
+            @font-face {
+                font-family: "DejaVuSans";
+                src: url("FONT_PATH");
+            }
+        </style>
+    </defs>
+
+    <!--
+      Native K4 framebuffer is 600x800.
+      Landscape UI is drawn in 800x600 and rotated via LANDSCAPE_TRANSFORM.
+    -->
+    <g transform="LANDSCAPE_TRANSFORM">
+        <rect x="0" y="0" width="800" height="600" fill="white"/>
+
+        <!-- Header -->
+        <rect x="0" y="0" width="800" height="130" fill="black"/>
+        <text x="400" y="55" font-family="DejaVuSans, Arial, sans-serif" font-size="48" text-anchor="middle" fill="white">WEEKDAY</text>
+        <text x="400" y="105" font-family="DejaVuSans, Arial, sans-serif" font-size="32" text-anchor="middle" fill="white">DATE</text>
+
+        <!-- Digital clock: y=CLOCK_Y is baseline for optical vertical center -->
+        <text x="400" y="CLOCK_Y" font-family="DejaVuSans, monospace" font-size="FONT_SIZE" text-anchor="middle" fill="black">HOURS:MINUTES</text>
+
+        <!-- Footer -->
+        <rect x="0" y="550" width="800" height="50" fill="white" stroke="black" stroke-width="1"/>
+        <text x="210" y="580" font-family="DejaVuSans, Arial, sans-serif" font-size="18" fill="black">BATTERY_LABEL:</text>
+        <rect x="310" y="565" width="200" height="20" fill="#e0e0e0" stroke="black" stroke-width="1"/>
+        <rect x="310" y="565" width="BATTERY_WIDTH" height="20" fill="black" stroke="black" stroke-width="1"/>
+        <text x="530" y="580" font-family="DejaVuSans, Arial, sans-serif" font-size="18" fill="black">BATTERY_LEVEL%</text>
+    </g>
+</svg>
