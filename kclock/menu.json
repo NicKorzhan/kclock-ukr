@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "name": "Kindle Годинник",
+      "name": "Kindle Clock",
       "priority": -999,
       "action": "./src/start.sh > /tmp/root/logfile.log 2>&1"
     }

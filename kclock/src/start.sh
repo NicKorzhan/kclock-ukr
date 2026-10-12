@@ -10,17 +10,20 @@ OUTPUT_OPTIMIZED_PNG_FILE="$OUTPUT_DIR/image_optimized.png"
 EXIT_FILE="$OUTPUT_DIR/EXIT"
 SETTINGS_FILE="$OUTPUT_DIR/settings"
 FONT_PATH="../fonts/DejaVuSans.ttf"
+CLOCK_FONT_PATH="../fonts/BarlowCondensed-Bold.ttf"
 LOG_FILE="/tmp/kclock.log"
 
-# Full flash refresh every N minute ticks (partial updates in between)
-FULL_REFRESH_MINUTES=10
-MINUTE_TICK=0
+# Screen update every N minutes (:00, :05, …); full flash every 2 hours
+UPDATE_INTERVAL_MINUTES=5
+FULL_REFRESH_INTERVAL_MINUTES=120
+TICK=0
 
 ORIENTATION="landscape_right"
-FONT_SIZE=240
+FONT_SIZE=280
 FONT_SIZE_MIN=80
-FONT_SIZE_MAX=300
+FONT_SIZE_MAX=360
 FONT_SIZE_STEP=20
+HEADER_MODE="weekday"
 
 # K4 keycodes (press = "CODE 1")
 KEY_HOME="102 1"
@@ -93,20 +96,27 @@ get_ukrainian_month() {
 get_ukrainian_date() {
   DAY=$(strip_leading_zero "$(date +%d)")
   [ -n "$DAY" ] || DAY=$(date +%d)
-  echo "$DAY $(get_ukrainian_month) $(date +%Y)"
+  echo "$DAY $(get_ukrainian_month)"
 }
 
 load_settings() {
   if [ -f "$SETTINGS_FILE" ]; then
     ORIENTATION_LOADED=$(sed -n 's/^ORIENTATION=//p' "$SETTINGS_FILE" | head -n 1)
     FONT_SIZE_LOADED=$(sed -n 's/^FONT_SIZE=//p' "$SETTINGS_FILE" | head -n 1)
+    HEADER_MODE_LOADED=$(sed -n 's/^HEADER_MODE=//p' "$SETTINGS_FILE" | head -n 1)
     [ -n "$ORIENTATION_LOADED" ] && ORIENTATION="$ORIENTATION_LOADED"
     [ -n "$FONT_SIZE_LOADED" ] && FONT_SIZE="$FONT_SIZE_LOADED"
+    [ -n "$HEADER_MODE_LOADED" ] && HEADER_MODE="$HEADER_MODE_LOADED"
   fi
 
   case "$ORIENTATION" in
     portrait|landscape_left|landscape_right) ;;
     *) ORIENTATION="landscape_right" ;;
+  esac
+
+  case "$HEADER_MODE" in
+    weekday|date) ;;
+    *) HEADER_MODE="weekday" ;;
   esac
 
   FONT_SIZE=$(echo "$FONT_SIZE" | sed 's/[^0-9]//g')
@@ -123,6 +133,18 @@ save_settings() {
   mkdir -p "$OUTPUT_DIR"
   echo "ORIENTATION=$ORIENTATION" >"$SETTINGS_FILE"
   echo "FONT_SIZE=$FONT_SIZE" >>"$SETTINGS_FILE"
+  echo "HEADER_MODE=$HEADER_MODE" >>"$SETTINGS_FILE"
+}
+
+flip_header_mode() {
+  load_settings
+  if [ "$HEADER_MODE" = "weekday" ]; then
+    HEADER_MODE="date"
+  else
+    HEADER_MODE="weekday"
+  fi
+  save_settings
+  log "header=$HEADER_MODE"
 }
 
 increase_font() {
@@ -150,13 +172,15 @@ set_orientation() {
   save_settings
 }
 
-resolve_font_path() {
-  if [ -f "$FONT_PATH" ]; then
-    DIR=$(cd "$(dirname "$FONT_PATH")" && pwd)
-    echo "$DIR/$(basename "$FONT_PATH")"
+resolve_font_file() {
+  PATH_CANDIDATE="$1"
+  FALLBACK="$2"
+  if [ -f "$PATH_CANDIDATE" ]; then
+    DIR=$(cd "$(dirname "$PATH_CANDIDATE")" && pwd)
+    echo "$DIR/$(basename "$PATH_CANDIDATE")"
   else
     # Relative to output/image.svg
-    echo "../fonts/DejaVuSans.ttf"
+    echo "$FALLBACK"
   fi
 }
 
@@ -165,17 +189,22 @@ build_svg() {
   MINUTES=$(strip_leading_zero "$(date +%M)")
   [ -n "$HOURS" ] || HOURS=0
   [ -n "$MINUTES" ] || MINUTES=0
+  MINUTES=$((MINUTES / UPDATE_INTERVAL_MINUTES * UPDATE_INTERVAL_MINUTES))
   HOURS_PADDED=$(printf "%02d" "$HOURS")
   MINUTES_PADDED=$(printf "%02d" "$MINUTES")
 
-  DATE=$(get_ukrainian_date)
-  WEEKDAY=$(get_ukrainian_weekday)
+  if [ "$HEADER_MODE" = "date" ]; then
+    HEADER_TEXT=$(get_ukrainian_date)
+  else
+    HEADER_TEXT=$(get_ukrainian_weekday)
+  fi
   BATTERY_LABEL="Батарея"
 
   BATTERY_LEVEL=$(get_battery_level)
   BATTERY_WIDTH=$((BATTERY_LEVEL * 2))
 
-  ABS_FONT_PATH=$(resolve_font_path)
+  ABS_FONT_PATH=$(resolve_font_file "$FONT_PATH" "../fonts/DejaVuSans.ttf")
+  ABS_CLOCK_FONT_PATH=$(resolve_font_file "$CLOCK_FONT_PATH" "../fonts/BarlowCondensed-Bold.ttf")
 
   if [ "$ORIENTATION" = "portrait" ]; then
     TEMPLATE_FILE="template_portrait.svg"
@@ -200,14 +229,14 @@ build_svg() {
 
   sed \
     -e "s|FONT_PATH|$ABS_FONT_PATH|" \
+    -e "s|CLOCK_FONT_PATH|$ABS_CLOCK_FONT_PATH|" \
     -e "s|LANDSCAPE_TRANSFORM|$TRANSFORM|" \
     -e "s/CLOCK_Y/$CLOCK_Y/" \
     -e "s/FONT_SIZE/$FONT_SIZE/" \
     -e "s/BATTERY_WIDTH/$BATTERY_WIDTH/" \
     -e "s/BATTERY_LEVEL/$BATTERY_LEVEL/" \
     -e "s/BATTERY_LABEL/$BATTERY_LABEL/" \
-    -e "s/WEEKDAY/$WEEKDAY/" \
-    -e "s/DATE/$DATE/" \
+    -e "s/HEADER_TEXT/$HEADER_TEXT/" \
     -e "s/HOURS/$HOURS_PADDED/" \
     -e "s/MINUTES/$MINUTES_PADDED/" \
     "$TEMPLATE_FILE" >"$OUTPUT_SVG_FILE"
@@ -232,8 +261,8 @@ print_clock_full() {
   eips -c || true
   eips -f -g "$OUTPUT_OPTIMIZED_PNG_FILE" 2>/dev/null || \
     eips -g "$OUTPUT_OPTIMIZED_PNG_FILE" || log "ERROR eips failed"
-  MINUTE_TICK=0
-  log "refresh=full"
+  TICK=0
+  log "refresh=full header=$HEADER_MODE"
 }
 
 print_clock_partial() {
@@ -242,7 +271,7 @@ print_clock_partial() {
   build_png || return 1
   # K4: -x/-y unsupported; omit -c/-f for a quieter partial waveform update.
   eips -g "$OUTPUT_OPTIMIZED_PNG_FILE" || log "ERROR eips partial failed"
-  log "refresh=partial"
+  log "refresh=partial header=$HEADER_MODE"
 }
 
 # Back-compat name used by key handlers — always full after UI changes
@@ -301,30 +330,41 @@ process_key() {
   done
 }
 
-sleep_until_next_minute() {
-  SEC=$(date +%S)
-  SEC=$(strip_leading_zero "$SEC")
+sleep_until_next_update() {
+  [ -f "$EXIT_FILE" ] && return 1
+
+  MIN=$(strip_leading_zero "$(date +%M)")
+  SEC=$(strip_leading_zero "$(date +%S)")
+  [ -n "$MIN" ] || MIN=0
   [ -n "$SEC" ] || SEC=0
-  REMAIN=$((60 - SEC))
-  [ "$REMAIN" -lt 1 ] && REMAIN=60
-  i=0
-  while [ "$i" -lt "$REMAIN" ]; do
-    [ -f "$EXIT_FILE" ] && return 1
-    sleep 1
-    i=$((i + 1))
-  done
+
+  INTO=$((MIN % UPDATE_INTERVAL_MINUTES))
+  REMAIN_MIN=$((UPDATE_INTERVAL_MINUTES - INTO))
+  REMAIN=$((REMAIN_MIN * 60 - SEC))
+  if [ "$REMAIN" -le 0 ]; then
+    REMAIN=$((UPDATE_INTERVAL_MINUTES * 60))
+  fi
+
+  log "sleep ${REMAIN}s"
+  sleep "$REMAIN"
+
+  [ -f "$EXIT_FILE" ] && return 1
   return 0
 }
 
 print_clock_loop() {
+  FULL_REFRESH_TICKS=$((FULL_REFRESH_INTERVAL_MINUTES / UPDATE_INTERVAL_MINUTES))
+  [ "$FULL_REFRESH_TICKS" -ge 1 ] || FULL_REFRESH_TICKS=1
+
   while true; do
     [ -f "$EXIT_FILE" ] && exit 0
-    sleep_until_next_minute || exit 0
+    sleep_until_next_update || exit 0
     [ -f "$EXIT_FILE" ] && exit 0
 
-    MINUTE_TICK=$((MINUTE_TICK + 1))
-    if [ "$MINUTE_TICK" -ge "$FULL_REFRESH_MINUTES" ]; then
+    TICK=$((TICK + 1))
+    if [ "$TICK" -ge "$FULL_REFRESH_TICKS" ]; then
       print_clock_full
+      flip_header_mode
     else
       print_clock_partial
     fi
@@ -341,7 +381,7 @@ main() {
 
   load_settings
   save_settings
-  log "orientation=$ORIENTATION font=$FONT_SIZE"
+  log "orientation=$ORIENTATION font=$FONT_SIZE header=$HEADER_MODE"
 
   stop_framework
   print_clock_full || log "ERROR first print_clock failed"

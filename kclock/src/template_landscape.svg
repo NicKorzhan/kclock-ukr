@@ -5,6 +5,10 @@
                 font-family: "DejaVuSans";
                 src: url("FONT_PATH");
             }
+            @font-face {
+                font-family: "ClockFont";
+                src: url("CLOCK_FONT_PATH");
+            }
         </style>
     </defs>
 
@@ -15,13 +19,12 @@
     <g transform="LANDSCAPE_TRANSFORM">
         <rect x="0" y="0" width="800" height="600" fill="white"/>
 
-        <!-- Header -->
+        <!-- Header: one large line (weekday or date), alternates every 2h -->
         <rect x="0" y="0" width="800" height="130" fill="black"/>
-        <text x="400" y="55" font-family="DejaVuSans, Arial, sans-serif" font-size="48" text-anchor="middle" fill="white">WEEKDAY</text>
-        <text x="400" y="105" font-family="DejaVuSans, Arial, sans-serif" font-size="32" text-anchor="middle" fill="white">DATE</text>
+        <text x="400" y="88" font-family="DejaVuSans, Arial, sans-serif" font-size="72" text-anchor="middle" fill="white">HEADER_TEXT</text>
 
-        <!-- Digital clock: y=CLOCK_Y is baseline for optical vertical center -->
-        <text x="400" y="CLOCK_Y" font-family="DejaVuSans, monospace" font-size="FONT_SIZE" text-anchor="middle" fill="black">HOURS:MINUTES</text>
+        <!-- Digital clock: condensed bold for distance readability -->
+        <text x="400" y="CLOCK_Y" font-family="ClockFont, DejaVuSans, monospace" font-size="FONT_SIZE" text-anchor="middle" fill="black">HOURS:MINUTES</text>
 
         <!-- Footer -->
         <rect x="0" y="550" width="800" height="50" fill="white" stroke="black" stroke-width="1"/>
